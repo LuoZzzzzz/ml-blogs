@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Python Data Analysis</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+
+  <!-- Python Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+<body>
+  <header>
+    Python Data Analysis 1
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Basic Data Analysis</h1>
+
+    <p>
+        If we are given some data, here are some basic visualizations we can make with the data.
+    </p>
+
+    <h3>Step 0. Load and inspect data</h3>
+    <p>If data is pickled, use <code>pd.read_pickle(<filename>)</code>.</p>
+
+    <p>If data is in csv, use <code>pd.read_csv(<filename>)</code>. Note that usually .csv destroys datatypes such as timestamps, and it also resets the index to the default index (0, 1, 2, 3, etc). We can fix up the dataframe by doing the following: </p>
+    
+    <pre><code class="language-python">df_raw = pd.read_csv("major_snp_daily/price_daily")
+df = df_raw.set_index("Date")
+df.index = pd.to_datetime(df.index) # cast index from object to datetime 
+df.describe() # get basic descriptors for df</code></pre>
+
+    <p>Note that in general functions such as <code>.set_index()</code> are not in place - they return a new dataframe with the updated index, so remember to assign a variable!</p>
+
+    <h3>Step 1. Inspect missing values</h3>
+
+    <pre><code class="language-python">missing_counts = df.isna().sum().sort_values(ascending=False)
+print(missing_counts.head(20))
+
+# Drop tickers that have more than 100 missing data points
+tickers_to_drop = missing_counts[missing_counts > 100].index
+df = df.drop(columns=tickers_to_drop)</code></pre>
+   
+    <p>
+      The method <code>.isna()</code> returns a dataframe with the same shape as the original, with boolean entries <code>True</code> or <code>False</code> depending on whether the entry in the original dataframe is <code>NaN</code>. By default, <code>.sum()</code> sums down columns, so we end up with the series with tickers and index, and number of missing counts for each ticker as values.
+    </p>
+
+    <p>Sometimes the missing data is not <code>NaN</code> but <code>0</code>. In this case we can do: </p>
+
+    <pre><code class="language-python">zero_counts = df.eq(0).sum()
+zero_counts.sort_values(ascending=False)</code></pre>
+
+    <h3>Step 2. Do some quick plots</h3>
+
+    <p>Use the built in <code>.plot()</code> function to make some quick visualizations of the data:</p>
+
+    <pre><code class="language-python"># Pandas built-in plotting function - quick plot of first 10 tickers
+ax = df.iloc[:, :10].plot(figsize=(12,6), alpha=0.5, linewidth=1.0)
+
+# Draw in some vertical date lines for special events
+for date in ["2020-03-16", "2025-04-02"]:
+    ax.axvline(date, color="gray", linestyle="--", alpha=0.7)</code></pre>   
+     
+    <p>We use <code>.iloc</code> (integer locate) to identify rows/columns of the dataframe by their numerical position. If we instead want to pull out specific dates or specific tickers, use regular locate <code>.loc()</code> instead. For example, <code>df.loc("2020-01-01":"2020-31-12")</code>. Note that to edit the graph we need to save the axis of the figure, which is returned when <code>.plot()</code> is called.</p>
+
+    <p>We can also compute and visualize returns for different price series. The <code>.pct_change()</code> method comes in handy:</p>
+
+    <pre><code class="language-python"># Compute 1-day returns 
+returns = df.pct_change()
+
+# Plot return distributions for first nine stocks
+axes = returns.iloc[:, :9].hist(bins=50, figsize=(12,10))</code></pre>   
+    
+    <p>If we want to compute 2-day returns (today vs two days ago), we use <code>.pct_change(2)</code>.</p>
+    
+    <p>Some other common series to plot:</p>
+
+    <pre><code class="language-python"># Common features
+df.mean().sort_values(ascending=False) # mean retuns over entire timeframe
+df.std().sort_values(ascending=False)  # standard deviation over entire timeframe
+df.rolling(21).mean()   # new dataframe which columns are 21 days rolling averages of old dataframe
+df.rolling(21).std()    # 21 days rolling standard deviation of old dataframe</code></pre> 
+
+    <h3>Step 3. Dispersion plots (if applicable)</h3>
+
+    <p>If we are working with stock data, then we might be interested in market regimes. One way to identify changes in market regimes is to look at dispersion plots: </p>
+
+    <pre><code class="language-python">dispersion = returns.std(axis=1)
+ax1 = dispersion.plot(alpha=0.8, title="Cross-sectional Return Dispersion", figsize=(12, 6))
+
+market_ret = returns.mean(axis=1)
+ax2 = market_ret.plot(alpha=0.8, title="Average Market Returns", figsize=(12, 6))
+
+for date in ["2020-03-16", "2025-04-02"]:
+    ax1.axvline(date, color="gray", linestyle="--", alpha=0.7)
+    ax2.axvline(date, color="gray", linestyle="--", alpha=0.7)</code></pre> 
+    
+    <p>By dispersion, we mean we look at the mean and standard deviations of returns across all stocks on a single day, instead of a single stock over time.</p>
+
+    <h3>Step 4. Correlation analysis</h3>
+    
+    <p>Compute the correlation matrix for stock returns using <code>corr = returns.corr()</code>. We can plot it using <code>seaborn</code>: </p>
+    
+    <pre><code class="language-python">import seaborn as sns
+
+# Make correlation matrix
+corr = returns.corr()
+
+plt.figure(figsize=(6, 5))
+sns.heatmap(corr, cmap="coolwarm", vmin=-1, vmax=1)
+plt.title("Correlation Heatmap")
+plt.show()</code></pre> 
+
+    <p>If we are working with stocks we may suspect the presence of a number of highly correlated asset classes. We can investigate this by evaluating the correlation distance $1-\text{corr}$ between all pairs of stocks, and grouping the stocks so that stocks with low correlation distance are grouped in the same cluster.</p>
+
+    <pre><code class="language-python">from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+from scipy.spatial.distance import squareform
+
+# Convert correlation to distance
+dist = 1 - corr
+
+# Remove unnecessary information from dist matrix so scipy does not complain
+dist_condensed = squareform(dist, checks=False)
+
+# Perform hierarchical clustering
+link = linkage(dist_condensed, method="ward")
+
+# Create cluster labels
+clusters = fcluster(link, t=5, criterion="maxclust")  # t = number of clusters
+
+# Print cluster map
+cluster_map = pd.DataFrame({
+    "Ticker": corr.index,
+    "Cluster": clusters
+}).sort_values("Cluster")
+
+for c in sorted(cluster_map.Cluster.unique()):
+    print(f"\nCluster {c}:")
+    print(cluster_map[cluster_map.Cluster == c].Ticker.values)</code></pre> 
+
+    <p>Here is an example output:</p>
+
+    <pre><code class="language-python">Cluster 1:
+['PLD' 'ESS' 'MAA' 'ARE' 'VTR' 'EQR' 'AVB' 'WELL' 'O' 'SPG' 'NEE' 'DUK'
+ 'SO' 'EXC' 'AEP' 'ED' 'PEG' 'XEL' 'D' 'EIX' 'FE' 'PPL' 'AES' 'SRE']
+
+Cluster 2:
+['VRTX' 'TMUS' 'BMY' 'PFE' 'MRK' 'ABBV' 'MDLZ' 'VZ' 'HUM' 'CL' 'LMT' 'RTX'
+ 'GD' 'T' 'GIS' 'KMB' 'REGN' 'UNH' 'BF-B' 'DEO' 'TAP' 'COST' 'WMT' 'PEP'
+ 'KO' 'PM' 'LLY' 'TGT' 'MO' 'ALL' 'MKC' 'SJM' 'TSN' 'CPB' 'PGR' 'PG' 'KR'
+ 'HSY']
+
+Cluster 3:
+['HST' 'HMC' 'PCAR' 'CE' 'ALB' 'DD' 'CMI' 'FCX' 'STLD' 'NUE' 'AMP' 'BRK-B'
+ 'RCL' 'EMN' 'TM' 'STLA' 'ADM' 'IBM' 'CSCO' 'DAL' 'UAL' 'AAL' 'LUV' 'CSX'
+ 'UNP' 'NSC' 'WAB' 'CF' 'MOS' 'ORCL' 'F' 'GM' 'HOG' 'LYV' 'NCLH' 'AIG'
+ 'BA' 'FANG' 'OXY' 'DVN' 'WFC' 'GS' 'BKR' 'HAL' 'VLO' 'PSX' 'MPC' 'SLB'
+ 'EOG' 'COP' 'CVX' 'XOM' 'MS' 'C' 'COF' 'USB' 'AXP' 'SCHW' 'DE' 'CAT'
+ 'BLK' 'ROK' 'PH' 'BKNG' 'MAR' 'HLT' 'JPM' 'BAC' 'AME' 'HON' 'EMR' 'ETN'
+ 'GE']
+
+Cluster 4:
+['AMZN' 'INTC' 'ADBE' 'CRM' 'META' 'MSFT' 'NVDA' 'AMD' 'NOW' 'GOOG' 'TSLA'
+ 'MU' 'QCOM' 'CMG' 'CDNS' 'SNPS' 'TXN' 'GOOGL' 'AVGO' 'NFLX' 'AAPL' 'BIDU']
+
+Cluster 5:
+['LOW' 'NKE' 'MCD' 'HD' 'ICE' 'MSCI' 'MA' 'V' 'EL' 'LULU' 'ULTA' 'DIS'
+ 'CMCSA' 'CHTR' 'DHI' 'LEN' 'PHM' 'NVR' 'ODFL' 'CHRW' 'TMO' 'SBUX' 'ABT'
+ 'ZTS' 'IDXX' 'ISRG' 'EQIX' 'CCI' 'AMT' 'PPG' 'SHW' 'WBD' 'ECL' 'LIN'
+ 'UPS' 'FDX' 'GPN' 'FISV' 'FIS' 'MKTX' 'SPGI' 'CME' 'APD' 'JBHT']</code></pre> 
+    
+    <p>Having done this we can add an additional cluster index to the columns of the returns dataframe. This makes it into a multi-index dataframe: </p>
+    
+    <pre><code class="language-python">returns.columns = pd.MultiIndex.from_arrays(
+    [returns.columns, cluster_map.sort_index().Cluster], # make sure to sort the index of cluster_map (to align to the right stocks)
+    names=["Ticker", "Cluster"]
+)
+
+CLUSTER = 2
+cols = returns.columns.get_level_values("Cluster") == CLUSTER  # get all tickers in cluster 2
+cluster_2_returns = returns.loc[:, cols]</code></pre>
+
+    <h2>Helpful code snippets</h2>
+    
+    <p>Some fragments of code that routinely pop up when running backtests.</p>
+
+    <h3>Generate a list of <code>start:end</code> timestamps</h3>
+    <pre><code class="language-python">from dateutil.relativedelta import relativedelta
+
+# CONFIG 
+START_YEAR = 2000 
+END_YEAR = 2020
+DURATION = 2    # in years
+INTERVAL = 1/4  # duration between adjacent train-test blocks in years
+
+# Generate list of [(start, end), ...] for train-test blocks
+start = pd.Timestamp(f"{START_YEAR}-01-01")
+end_limit = pd.Timestamp(f"{END_YEAR}-12-31")
+
+delta_duration = relativedelta(years=DURATION)
+delta_interval = relativedelta(months=int(INTERVAL * 12))
+
+windows = []
+
+cur_start = start
+while True:
+    cur_end = cur_start + delta_duration
+    if cur_end > end_limit:
+        break
+    windows.append((cur_start, cur_end))
+    cur_start = cur_start + delta_interval</code></pre>
+
+    <h3>Make a compact grid of plots</h3>
+
+    <pre><code class="language-python">col_names = df.columns
+
+fig, axes = plt.subplots(8, 3, figsize=(10, 20))
+axes = axes.flatten()
+
+# Plot into each used axes
+for i, col in enumerate(col_names):
+    ax = axes[i]
+    df[col].plot(ax=ax)
+    missing_count = df.shape[0] - df[col].count()   # robust count of non-missing
+    ax.set_title(f"{col} | missing = {missing_count}/{df.shape[0]}")
+
+# Turn off any unused axes
+for j in range(len(col_names), len(axes)):
+    axes[j].axis("off")
+
+plt.tight_layout()
+plt.show()</code></pre>
+
+    <h3>Searching an OrderedDict recursively</h3>
+
+    <p>Surprise! The data is an XML file and you have to parse it into an ordered dictionary. We can search throught the dictionary recursively as follow:</p>
+
+<pre><code class="language-python"># Find all elements with a specific tag name
+def find_all(data, tag_name, results=None):
+    if results is None:
+        results = []
+    
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key == tag_name:
+                results.append(value)
+            find_all(value, tag_name, results)
+    elif isinstance(data, list):
+        for item in data:
+            find_all(item, tag_name, results)
+    
+    return results</code></pre>
+
+<pre><code class="language-python"># Find first element matching a condition
+def find_first(data, condition):
+    if isinstance(data, dict):
+        if condition(data):
+            return data
+        for value in data.values():
+            result = find_first(value, condition)
+            if result:
+                return result
+    elif isinstance(data, list):
+        for item in data:
+            result = find_first(item, condition)
+            if result:
+                return result
+    return None</code></pre>
+
+    <h2>Pandas commands</h2>
+    <p>Common Pandas commands for manipulating, filtering and cleaning data.</p>
+
+    <h3>df.groupby()</h3>
+
+    <p>Let's say we are working with market price data for a bunch of bonds, and we want to group the bonds together by their time to maturity so that we can calculate the mean yield for all bonds with the same TTM. We can run something like <code>df_mean = df.groupby("TTM").mean()</code>. Calling <code>df.groupby("TTM")</code> returns a <code>groupby</code> object, and further calling <code>.mean()</code> on that returns a dataframe that looks like this:</p>
+    
+    <pre><code class="language-python">       col1   col2   col3
+"TTM"
+3      10.5   4.2    8.0
+4       7.0   3.1    9.2
+5      12.3   1.7    6.4</code></pre>
+
+    <p>If we instead want to broad cast to the original dataframe (so that we don't collapse everything to their groups), then we do <code>df["TTM_mean"] = df.groupby("TTM")["value"].transform("mean")</code>.</p>
+
+    <h3>Filtering commands</h3>
+    
+    <pre><code class="language-python"># Boolean filtering
+df_filtered = df[df["price"] > 100]
+df_filtered = df[(df["age"] > 20) & (df["city"] == "London")]
+
+# Using .loc (safer, avoids chained assignment)
+df_subset = df.loc[df["age"] > 20, ["name", "income"]]
+
+# Filter by multiple values
+df_sector = df[df["sector"].isin(["Tech", "Energy", "Finance"])]
+
+# Negation
+df_active = df[~df["status"].isin(["inactive", "closed"])]
+
+# String filtering
+df_a = df[df["ticker"].str.startswith("A")]
+df_contains = df[df["company"].str.contains("Capital", na=False)]
+
+# Missing value filtering
+df_missing = df[df["price"].isna()]
+df_nonmissing = df[df["price"].notna()]
+
+# Date filtering
+df_after = df[df["date"] >= "2023-01-01"]
+df_month = df[df["date"].dt.month == 12]
+df_monday = df[df["date"].dt.weekday == 0]
+
+# Quantile filtering (remove outliers)
+p1, p99 = df["ret"].quantile([0.01, 0.99])
+df_trim = df[(df["ret"] >= p1) & (df["ret"] <= p99)]
+
+# Query-based filtering (very clean)
+df_q = df.query("price > 100 and volume < 500000")
+
+# Top-N per group
+df_top = df.groupby("sector").nlargest(3, "market_cap")
+
+# Faster top-N per group
+df_top = (
+    df.sort_values("market_cap")
+      .groupby("sector")
+      .tail(3)
+)</code></pre>
+
+    <h3>Cleaning commands</h3>
+
+    <pre><code class="language-python"># Drop duplicates
+df = df.drop_duplicates()
+df = df.drop_duplicates(subset=["ticker", "date"])
+
+# Handle missing values
+df["price"] = df["price"].fillna(df["price"].mean())
+df["sector"] = df["sector"].fillna("Unknown")
+df = df.dropna(subset=["price"])
+
+# Convert data types
+df["date"] = pd.to_datetime(df["date"])
+df["volume"] = df["volume"].astype("int64")
+df["is_active"] = df["is_active"].astype(bool)
+
+# Clean column names
+df.columns = df.columns.str.lower().str.replace(" ", "_")
+
+# Remove invalid or corrupted values
+df = df[df["price"] > 0]
+df = df[df["volume"] >= 0]
+df = df[df["return"].between(-1, 1)]
+
+# Winsorize extreme outliers
+df["ret"] = np.clip(
+    df["ret"],
+    df["ret"].quantile(0.01),
+    df["ret"].quantile(0.99)
+)
+
+# Standardize (z-score)
+df["z_price"] = (df["price"] - df["price"].mean()) / df["price"].std()
+
+# Rename columns
+df = df.rename(columns={"Adj Close": "adj_close"})
+
+# Reset index after filtering
+df = df.reset_index(drop=True)
+
+# Remove constant columns
+df = df.loc[:, df.nunique() > 1]</code></pre>
+
+</body>
+</html>
