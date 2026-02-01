@@ -74,6 +74,7 @@
     $$\hat{T}_\pi(\vec{v}) = \vec{v}$$
     <p>This is the equation that policy evaluation is solving.</p>
 
+    <h2>Value iteration</h2>
     <p>
       It turns out that instead of alternating between policy evaluations and improvements, one can apply an iterative algorithm repeatedly to $v(s)$, and not work with a policy $\pi$ during the process at all! When the iterative algorithm converges, the optimal policy $\pi^*$ is then extracted from the final $v(s)$ in a seemingly by magic. This procedure is known as value iteration. Here's how it goes:
     </p>
@@ -87,6 +88,7 @@
       During the optimisation process the state value function $v^{(k)}(s)$ does not in general correspond to any policy. However, when the algorithm eventually converges, the final state value function will correspond to the optimal policy $\pi^*$, which is incredible. Let's prove this in two parts: in the first part we show that when $v^{(k)}(s)$ eventually converges it will indeed correspond to some policy $\pi^*$, and in the second part we show that $\pi^*$ is indeed the optimal policy. 
     </p>
 
+    <h2>Proof that $\vec{v}^*$ corresponds to a some policy $\pi^*$</h2>
     <p>
       For brevity let us define the Bellman optimality operator, $\hat{T}^*$ as follows:
     </p>
@@ -113,6 +115,7 @@
     $$\vec{v}^* = \hat{T}_{\pi^*} \vec{v}^*$$
     <p>This proves by construction that the the solution $\vec{v}^*$ does in fact correspond to some policy $\pi^*$.</p>
 
+    <h2>Proof that $\pi^*$ is optimal</h2>
     <p>
       The next step is then to prove that $\pi^*$ is the optimal policy. To do this, we first establish two facts:
     </p>
