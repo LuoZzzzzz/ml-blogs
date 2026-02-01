@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RL Notes 1</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+</head>
+<body>
+  <header>
+    RL Notes 1
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Reinforcement Learning Notes 1</h1>
+    <p>Notes from chapters 1 and 2 of Sutton and Barto.</p>
+
+    <h2>Notation</h2>
+    <p>Suppose we are at time step $t$ and state $s_t$</p>
+      
+    <p>
+      Capital letters denote sets of states or random variables (no confusion due to the double meaning):
+    </p>
+
+    <p>
+      $S_{t+1}$: the set of possible states accessible by the agent given his current state $s_t$ <br>
+      $A_t$: the set of possible actions the agent can take given his current state $s_t$ <br>
+      $R$: the set of possible rewards given the current state of the agent $s_t$ and the action he takes $a_t$
+    </p>
+
+    <p>
+      Specific instances of a random variable are written in small letters:
+    </p>
+
+    <p>
+      $s_{t+1} \in S_{t+1}$: a specific next state <br>
+      $a_t \in A_t$: a specific action <br>
+      $r_{t+1} \in R_{t+1}$: a specific reward
+    </p>
+
+    <p>A trajectory can be described by the following string of random variables:</p>
+    $$S_0 \, A_0 \, | \, R_1 \, S_1 \, A_1 \, | \, R_2 \, S_2 \, A_2 \, | \, \dots$$
+    <p>Note that by convention reward always comes first.</p>
+
+    <p>
+      To generate the above trajectory, we need two other important ingredients: knowledge of the environment and a policy.
+    </p>
+
+    <p>
+      Complete knowledge of the environment means that we have access to the following distribution for all states, rewards and actions:
+    </p>  
+    $$\text{pr} (S_{t+1} = s_{t+1}, R_{t+1} = r_{t+1} \, | \, S_t = s_t, A_t = a_t)$$
+    <p>
+      Because subsequent states and rewards depend only on the present state and action, we say that the distribution of trajectories defined above satisfies the Markov property. The trajectories follow a distribution in the sense that if you run many of them you can make a histogram in trajectory space and normalise it to a probability distribution. The Markov property says that if you do that and try to describe the distribution, you will be able to factorise it into the product of many simple conditional distributions. 
+    </p>
+
+    <p>
+      A policy describes a probability distribution over actions $a_t \in A_t$ conditioned on the current state $s_t$, for all $s_t$. In math notation:
+    </p>
+    $$a_t \sim \pi (s_t) = \text{pr} (a_t \, | \, s_t)$$
+    <p>  
+      To be clear, $\sim$ means that we generate $a_t$ by sampling from the distribution $\pi(s_t)$. Sometimes there is no randomness (ie. the distribution is just a delta function), in which case we say the policy is deterministic. In that case we can write:
+    </p>
+    $$a_t = \pi (s_t)$$
+    <p>  
+      Finally, we define the return $G_t$ as:
+    </p>
+    $$G_t = \sum_{k = t+1}^{T} \gamma^{k-(t+1)} R_k$$
+    <p>
+      For example, if $t=0$ then the return $G_0$ can be written as:
+    </p>
+    $$G_0 = R_1 + \gamma R_2 + \gamma^2 R_3 + \gamma^3 R_4 + \dots + \gamma^{T-1} R_T$$
+    <p>  
+      $\gamma$ is the discount factor and it reflects the fact that future returns may be worth less than their nominal value today due to inflation. A couple of things to note. First, $G_t$ is a random variable, since it is determined by the trajectory which is itself a random variable. Second, $G_t$ describes the future returns at the point in time $t$ at state $s_t$. As $t$ changes, additional factors of $\gamma$ will be applied to the terms in the sum. 
+    </p>
+
+    <p>
+      The name of the game is to find a policy $\pi^*$ that maximises the expected value of $G_t$ (or $G_0$ if you like it that way, it really doesn't matter where we start the sum due to the Markov property). That is:
+    </p>
+    $$\pi^* = \text{max}_{\pi} \, \mathbb{E}_\pi[G_t]$$
+    <p>  
+      The subscript $\pi$ in the expectation means that the expected value above is calculated over the average of many trajectories generated under a <b>fixed</b> policy $\pi$. 
+    </p>
+
+    <p>
+      Let us define a couple of very useful functions.
+    </p>
+
+    <p>The state value function is defined as:</p>
+    $$v_\pi (s) = \mathbb{E}_\pi [G_t \, | \, S_t=s]$$
+    <p>The action value function is defined as:</p>
+    $$q_\pi (s, a) = \mathbb{E}_\pi [G_t \, | \, S_t=s, A_t=a]$$
+    <p>
+      So the action value function is a layer more detailed than the state value function. If we marginalise over the action value function we recover the state value function. 
+    </p>
+
+
+    <p>An important feature of the optimal policy $\pi^*$ is:</p>
+    $$v_{\pi^*}(s) \ge v_\pi (s)$$
+    <p>
+      for all $s$. That means that the optimal policy maximises the expected return from <b>any</b> initial state $s$. It can be proven that such a policy indeed exists. 
+    </p>
+      
+    <h2>Bellman equations</h2>
+    <p> 
+      By relating $v_\pi (s)$ and $q_\pi (s, a)$ we arrive at a powerful set of equations known as the Bellman equations. To start, let's write down the expected returns given that we are currently at state $s$ and play action $a$:
+    </p> 
+    $$
+      \begin{align}
+      \mathbb{E} [G_t \, | \, S_t=s, A_t=a]
+      &= \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma v_\pi (s')) \\
+      &= q_\pi (s, a)
+      \end{align}
+    $$
+    <p> 
+      Next, we note that the state value function is simply the marginal of the action value function with respect to $a$:
+    </p> 
+    $$v_\pi (s) = \sum_{a \in A_t} \pi(a \, | \, s) \cdot q_\pi (s, a)$$
+    <p>   
+      We can combine these together to get equations involving only $v_\pi (s)$ or $q_\pi (s, a)$. For the former:
+    </p> 
+    $$v_\pi (s) = \sum_{a \in A_t} [\pi(a \, | \, s) \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma v_\pi (s'))]$$
+    <p>And for the latter:</p> 
+    $$q_\pi (s, a) = \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma \sum_{a_t \in A_t} \pi(a_t \, | \, s) \cdot q_\pi (s', a_t))$$
+    <p> 
+      These are the <b>Bellman equations</b> for the state and action value functions respectively. Suppose there are in total $100$ states. Then there will be $100$ unknowns ($v_\pi (s)$) and $100$ equations, which we can solve to find the value of the value function for all states. Note that the summation in each individual equation run only over the states $s'$ that are accessible from $s$ via some action $a$.
+    </p> 
+
+    <p> 
+      Note that the system of equations for the action value function has more equations, because there is an additional action argument. 
+    </p> 
+
+    <h2>Policy iteration</h2>
+    <p>How do we find $\pi^*$? Let's first answer the following questions:</p>
+    <p>
+      1. <b>Policy evaluation</b>: given a policy $\pi$, how do we find the values of the state value function $v_\pi(s)$? <br>
+      2. <b>Policy improvement</b>: given a set complete of values for state value function, how do we improve our policy to increase the expected return?
+    </p>
+
+    <p>
+      In policy evaluation, we fix a policy $\pi$ and solve for $v_\pi (s)$ for all $s$. To get the process started, we initialise arbitrary $V(s)$ (capital denoting estimates) for all non terminal states. We fix the $V(s)$s of terminal states to $0$, since once we reach a terminal states we stop moving so the future return from a terminal state is just $0$. Next, we use this iterative update rule:
+    </p>
+    $$V(s) \leftarrow = \sum_{a \in A_t} [\pi(a \, | \, s) \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma V (s'))]$$
+    <p>
+      This is quite similar to the method of relaxation. Once this algorithm converges we will have a pretty good approximation of the value action function for $\pi$. 
+    </p>
+
+    <p>
+      The next step is to try and find a better policy. One straightforward approach is to pick the action that maximises the expected returns from a given state. That is:
+    </p>
+    $$\pi^{n+1} (s) = \text{max}_a \, q(s, a)$$
+    <p>  
+      In situations where there is a tie (ie. $q(s, a_1) = q(s, a_2)$), we pick each of the equally optimal actions with equal probability. 
+    </p>
+    
+    <p>
+      We run evaluation and improvement steps successively until both of them eventually stabalise. That means:
+    </p>
+    $$\pi^0 \rightarrow v_{\pi^0} \rightarrow \pi^1 \rightarrow v_{\pi^1} \rightarrow \dots$$
+    <p>
+      It can be shown that at that point, the policy will always converge towards the optimal policy. 
+    </p>
+
+</body>
+</html>
