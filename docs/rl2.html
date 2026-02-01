@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RL Notes 2</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+</head>
+<body>
+  <header>
+    RL Notes 2
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Value iteration</h1>
+    <p>Notes from chapters 1 and 2 of Sutton and Barto.</p>
+
+    <h2>Review of policy iteration</h2>
+    <p>
+      The goal of reinforcement learning is to solve for an optimal policy $\pi^*$. Policy iteration approaches this task by breaking the process into two parts: policy evaluation and policy improvement.
+    </p>
+
+    <p>
+      To recap, we start by picking an arbitrary policy $\pi$ and initialising some arbitrary values for the corresponding state value function $v_\pi(s)$. The first step, policy evaluation, solves for the actual state value function by repeatedly iterating:
+    </p>
+    $$v_\pi (s) = \sum_{a \in A_t} \pi(a \, | \, s) \cdot \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma v_\pi (s'))$$
+    <p>  
+      Once the iteration converges, the action value functions are computed using:
+    </p>  
+    <p style="font-size: 90%;">
+    $$q_\pi (s, a) = \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma \sum_{a_t \in A_t} \pi(a_t \, | \, s) \cdot q_\pi (s', a_t))$$
+    </p>
+    <p>  
+      Finally, the policy is improved using:
+    </p>  
+    $$\pi' (s) = \text{max}_a \, q(s, a)$$
+    <p>This is repeated until the policy converges.</p>
+
+    <p>
+      We can formalise the process a bit more by introducing the Bellman operator for the policy $\pi$. To begin, we note that we can rewrite the Bellman equation for the state value function as:
+    </p>
+    <p style="font-size: 70%;">
+      $$v_\pi (s) = \sum_{a \in A_t} \pi(a \, | \, s) \cdot \sum_{s' \in S_{t+1}} \text{pr} (S_{t+1}=s' \, | \, S_t=s, A_t=a) \cdot \gamma v_\pi (s') + \sum_{a \in A_t} \pi(a \, | \, s) \cdot \sum_{r \in R} \text{pr} (R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot r$$
+    </p>
+    <p>
+      The first term involves only $v_\pi(s')$s while the second term involves only $r$s. Therefore, we may write the whole thing as a matrix equation:
+    </p>
+    $$\vec{v} = \gamma P_\pi \vec{v} + \vec{r}_\pi$$
+    <p>  
+      Defining the Bellman operator $\hat{T}_\pi(\vec{v}) = \gamma P_\pi \vec{v} + \vec{r}_\pi$, the Bellman equation becomes:
+    </p>  
+    $$\hat{T}_\pi(\vec{v}) = \vec{v}$$
+    <p>This is the equation that policy evaluation is solving.</p>
+
+    <p>
+      It turns out that instead of alternating between policy evaluations and improvements, one can apply an iterative algorithm repeatedly to $v(s)$, and not work with a policy $\pi$ during the process at all! When the iterative algorithm converges, the optimal policy $\pi^*$ is then extracted from the final $v(s)$ in a seemingly by magic. This procedure is known as value iteration. Here's how it goes:
+    </p>
+    <ol>
+      <li>Initialise $v^{(0)}(s)$ arbitrarily</li>
+      <li>Repeatedly apply: $v^{(k+1)}(s) \leftarrow \max\limits_a \{ \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma v(s')) \}$</li>
+      <li>Extract policy once $v^{(k)}(s)$ converges</li>
+    </ol>
+
+    <p>
+      During the optimisation process the state value function $v^{(k)}(s)$ does not in general correspond to any policy. However, when the algorithm eventually converges, the final state value function will correspond to the optimal policy $\pi^*$, which is incredible. Let's prove this in two parts: in the first part we show that when $v^{(k)}(s)$ eventually converges it will indeed correspond to some policy $\pi^*$, and in the second part we show that $\pi^*$ is indeed the optimal policy. 
+    </p>
+
+    <p>
+      For brevity let us define the Bellman optimality operator, $\hat{T}^*$ as follows:
+    </p>
+    $$\hat{T}^*(v(s)) = \max\limits_a \{ \sum\limits_{\substack{s' \in S_{t+1} \\ r \in R}} \text{pr} (S_{t+1}=s', R_{t+1}=r \, | \, S_t=s, A_t=a) \cdot (r + \gamma v(s')) \}$$
+    <p>  
+      That is, to get the $i^{th}$ entry of the vector $\hat{T}^*(v(s))$ we take the $i^{th}$ state, calculate all possible actions we can perform from that state, and choose the largest expected return across all actions, pretending that $v(s)$ was indeed an actual state value function. If we repeat this process many times $v(s)$ will converge to the fixed point of $\hat{T}^*$, denoted $\vec{v}^*$, given by:
+    </p>
+    $$\vec{v}^* = \hat{T}^* \vec{v}^*$$
+    <p>
+      Here's the crucial part: for any value state vector $\vec{v}$, we have:
+    </p>  
+    $$\hat{T}^* \vec{v} = \max\limits_\pi \{ \hat{T}_\pi \vec{v} \}$$
+    <p>
+      The left hand side is the result of applying the Bellman optimality operator $\hat{T}^*$ to $\vec{v}$ - no conceptual difficulties here. The right hand side is a bit trickier to interpret. The idea is this: for any state $s$, we calculate the expected return for all possible actions $a$ from $s$ using current $v(s')$s and knowledge of the environment. We then construct a greedy deterministic policy that, for each $s$, picks the action with the highest expected return. This greedy policy maximises the value of $\hat{T}_\pi\vec{v}$ over all possible all possible policies. Because this greedy policy is essentially constructed to do the same thing as $\hat{T}^*$ we get the above equality. 
+    </p>
+
+    <p>
+      Having established this fact, we then note that:
+    </p>
+    $$\vec{v}^* = \hat{T}^*\vec{v}^* = \max\limits_\pi \{ \hat{T}_\pi \vec{v}^* \}$$
+    <p>  
+      Calling our optimal greedy policy $\pi^*$ we get:
+    </p>
+    $$\vec{v}^* = \hat{T}_{\pi^*} \vec{v}^*$$
+    <p>This proves by construction that the the solution $\vec{v}^*$ does in fact correspond to some policy $\pi^*$.</p>
+
+    <p>
+      The next step is then to prove that $\pi^*$ is the optimal policy. To do this, we first establish two facts:
+    </p>
+
+    <ol>
+      <li>The Bellman operator is monotonic. For vectors $\vec{v}$ and $\vec{u}$ where $\vec{v} \ge \vec{u}$ (component-wise), we have $\hat{T}_\pi \vec{v} \ge \hat{T}_\pi \vec{u}$ for any policy $\pi$. This is intuitive, as the elements of the operator $\hat{T}_\pi$ are all non-negative. </li>
+      <li>The root of a Bellman operator $\hat{T}_\pi$ may be found iteratively, using $\vec{v}_\pi = \lim\limits_{n \rightarrow \infty} (\hat{T}_\pi)^n \, \vec{v}$ for any arbitrary starting vector $\vec{v}$. </li>
+    </ol>
+    
+    <p>
+      Now we are ready. Let's clarify what we are trying to show. We are trying to show that for any other policy $\mu$, the solution to the Bellman equation $\vec{v}_\mu = \hat{T}_\mu \vec{v}_\mu$ is lesser or equal to $\vec{v}^*$ for all components. We start by noting that
+    </p>
+    $$\hat{T}_{\pi^*}\vec{v}^* \ge \hat{T}_\mu \vec{v}^*$$
+    <p>  
+      by construction of $\pi^*$. Since $\vec{v}^* = \hat{T}_{\pi^*}\vec{v}^*$, we have:
+    </p>  
+    $$\vec{v}^* \ge \hat{T}_\mu \vec{v}^*$$
+    <p>  
+      Applying $\hat{T}_\mu$ to both sides, and using the monocity condition of $\hat{T}_\mu$ gives:
+    </p>  
+    $$\hat{T}_\mu \vec{v}^* \ge (\hat{T}_\mu)^2 \vec{v}^*$$
+    <p>
+      Combining this with the above gives:
+    </p>  
+    $$\vec{v}^* \ge \hat{T}_\mu \vec{v}^* \ge (\hat{T}_\mu)^2 \vec{v}^*$$
+    <p>  
+      We keep repeating this, which gives the following series of inequalities:
+    </p>
+    $$\vec{v}^* \ge \hat{T}_\mu \vec{v}^* \ge \cdots \ge (\hat{T}_\mu)^\infty \, \vec{v}^* \rightarrow \vec{v}_\mu$$
+    <p>This establishes that $\vec{v}^* \ge \vec{v}_\mu$ for any other policy $\mu$, so $\pi^*$ is indeed optimal.</p>
+</body>
+</html>
