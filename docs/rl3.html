@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RL Notes 3</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+</head>
+<body>
+  <header>
+    RL Notes 3
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>The game of pig</h1>
+    <p>Alice and Bob take turns rolling a fair six sided die. Suppose it is Alice's turn. She will repeatedly roll the die until either a $1$ is rolled, or she chooses to hold. The sum of her dice rolls for the turn are accumulated as her current total. Should she choose to hold, her current total is added to her score, and she ends her turn. On the other hand, if she rolls a $1$, then her current total is lost and her turn ends. Both players start with a score of $0$, and the goal is to reach a score of $100$ first. </p>
+</body>
+</html>

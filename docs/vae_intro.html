@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Variational Autoencoders</title>
+  <title>Variational autoencoders</title>
 
   <!-- Link external CSS -->
   <link rel="stylesheet" href="styles.css" />
@@ -26,7 +26,7 @@
 </head>
 <body>
   <header>
-    Variational Autoencoders
+    Variational autoencoders
   </header>
 
   <main>
@@ -34,7 +34,7 @@
       <a href="index.html" class="btn">Index</a>
     </nav>
 
-    <h1>A Simple Introduction</h1>
+    <h1>VAEs intro</h1>
 
     <p>
       We have a dataset $\mathbf{X} = \{X_1, \dots, X_N\}$ that is drawn independently from the same probability distribution $\tilde{P}(X)$. 
@@ -68,7 +68,7 @@
       We can then perform backpropagation and gradient descent on the objective $\log P(\mathbf{X})$ to tune the parameters of the conditional distribution, $\theta$. 
     </p>
 
-    <h2>Efficient Sampling</h2>
+    <h2>Efficient sampling</h2>
     <p>  
       The main issue with the above approach is that $P(X_i|z_j)$ will be close to $0$ for most of the $z_j$ we sample. 
       This means we have to sample a ridiculously large number of points in order to obtain a reasonably accurate estimate of $P(X)$. 
@@ -92,7 +92,7 @@
       The idea is the same with continuous $X$, except that $P(X)$ now manifests in the distribution of the points $X_i$ in $X$ space. 
     </p>
 
-    <h2>The Intractable Posterior</h2>
+    <h2>The intractable posterior</h2>
     <p>
       We now run into another problem - the distribution $P(z|X)$, known as the posterior, is intractable. 
       What do we do?
@@ -150,7 +150,7 @@
     \end{aligned}	
     $$
 
-    <h2>Interpreting the Objective</h2>
+    <h2>Interpreting the objective</h2>
     <p>
       Let's take a look at what we have here. 
       The left hand side of the equation contains the objective that we wish to maximise, $\log P(X)$. 
@@ -176,7 +176,7 @@
       While mathematically there is no difference, the second path feels much more natural, and introduces the meaning of each element in a much more contextual way. 
     </p>
 
-    <h2>Another Interpretation of the Objective</h2>
+    <h2>Another interpretation of the objective</h2>
     <p>
       There is another way we can interpret the objective function that parallels traditional autoencoders. 
     </p>
