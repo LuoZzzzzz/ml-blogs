@@ -175,17 +175,18 @@
       The next step is to try and find a better policy. One straightforward approach is to pick the action that maximises the expected returns from a given state. That is:
     </p>
     $$\pi^{n+1} (s) = \text{max}_a \, q(s, a)$$
-    <p>  
+    <p>
       In situations where there is a tie (ie. $q(s, a_1) = q(s, a_2)$), we pick each of the equally optimal actions with equal probability. 
     </p>
-    
+
     <p>
       We run evaluation and improvement steps successively until both of them eventually stabalise. That means:
     </p>
     $$\pi^0 \rightarrow v_{\pi^0} \rightarrow \pi^1 \rightarrow v_{\pi^1} \rightarrow \dots$$
     <p>
-      It can be shown that at that point, the policy will always converge towards the optimal policy. 
+      It can be shown that at that point, the policy will always converge towards the optimal policy.
     </p>
 
+  </main>
 </body>
 </html>

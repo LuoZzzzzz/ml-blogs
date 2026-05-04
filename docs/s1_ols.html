@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stats 1</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+</head>
+<body>
+  <header>
+    Stats 1
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Linear regression basics</h1>
+    <p>
+      Suppose we have a data generating process where the random variable $x$, a dimension $p$ row vector, is sampled from some distribution, following which the random variable $y$, a number, is created via:
+      $$y = x\beta + \epsilon$$
+      where $\beta$ is a dimension $p$ column vector and $\epsilon$ is a noise random variable. As standard practice we set the first entry of $x = 1$, in which case the first entry of $\beta$ represents the bias. We let $X \in \mathbb{R}^{n\times p}$ be a stack of $n$ $X$s, $Y \in \mathbb{R}^{n}$ and $\epsilon \in \mathbb{R}^{n}$, so $(X, Y)$ represents a dataset "random variable". 
+    </p>
+    <p>
+      Now we observe a dataset $(\mathbb{X}, \mathbb{Y})$. We want to find $\beta_{\text{ls}}$ such that:
+      $$|\mathbb{Y} - \mathbb{X} \beta_\text{ls}|^2$$
+      is minimised. Taking partial derivatives with respect to the components of $\beta_{\text{ls}}$ gives the condition:
+      $$\mathbb{X}^T\mathbb{X} \beta_{\text{ls}} = \mathbb{X}^T\mathbb{Y} \implies \beta_{\text{ls}} = (\mathbb{X}^T\mathbb{X})^{-1}\mathbb{X}^T\mathbb{Y}$$
+      $\beta_{\text{ls}}$ is the "least squares" solution. Note that we have (somewhat pedantically) distinguished the observed dataset $(\mathbb{X}, \mathbb{Y})$ from the random dataset variable $(X, Y)$. 
+    </p>
+    <p>
+      Now, we adopt the <b>fixed design</b> assumption: the input is treated as a known constant, and all randomness enters solely through $\epsilon$. In other words, we work with $(\mathbb{X}, Y)$ where $Y = \mathbb{X}\beta + \epsilon$. Under this assumption $\beta_\text{ls}$ becomes a random variable $\hat{\beta}$, called an estimator, which randomness comes entirely from $\epsilon$. The main simplification from doing this is that when computing expectations we only need to integrate over the noise distribution, rather than the joint distribution of both noise and input (which distribution is much harder to postulate compared to the noise distribution). Therefore, all the derivations that follow really apply to $\hat{\beta} \,|\, \mathbb{X}$. 
+    </p>
+    <p>
+      <b>Ordinary least squares</b><br>
+      Given the data generating process $Y = \mathbb{X}\beta + \epsilon$, the random variable $\hat{\beta}$ is:
+      $$\hat{\beta} \,|\, \mathbb{X} = (\mathbb{X}^T\mathbb{X})^{-1}\mathbb{X}^T Y = (\mathbb{X}^T\mathbb{X})^{-1}\mathbb{X}^T (\mathbb{X}\beta + \epsilon) = \beta + (\mathbb{X}^T\mathbb{X})^{-1}\mathbb{X}^T \epsilon$$
+      Let us also assume that the individual noise terms are sampled independently and identically from the normal distribution $\mathcal{N}(0, \sigma^2)$. This is the same as saying that the noise vector $\epsilon \in \mathbb{R}^n$ is sampled from the multivariate normal $\mathcal{N}(0, \sigma^2 I_n)$. Then:$$\hat{\beta} \sim \mathcal{N}(\beta, \sigma^2 (\mathbb{X}^T\mathbb{X})^{-1})$$So even though the noise is uncorrelated, our estimates for various $\beta_i$s become correlated by the design matrix $\mathbb{X}^T \mathbb{X}$. 
+
+      We can also define the estimator (note: an estimator is just a quantity that we calculate from some data):
+      $$\hat{\sigma}^2 = \frac{1}{n-p} |Y - \mathbb{X}\hat{\beta}|^2$$
+      in which case:
+      $$\frac{n-p}{\sigma^2}\hat{\sigma}^2 \sim \chi^2_{n-p}$$
+      Now we do two things. First, given a set of estimators $\hat{\beta}_1, \dots$ we would like to calculate confidence intervals. Note, of course, that the validity of these intervals depend on the validity that the underlying data generating process is really as states - which is often not true!
+    </p>
+    <p>
+      First normalise the $j^\text{th}$ component of $\hat{\beta}$: 
+      $$\frac{\hat{\beta}_j - \beta_j}{\sigma \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}} \sim \mathcal{N}(0, 1)$$
+      Therefore: 
+      $$\left.\frac{\hat{\beta}_j - \beta_j}{\sigma \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}}\right/\sqrt{\frac{n-p}{\sigma^2}\hat{\sigma}^2/(n-p)} = \frac{\hat{\beta}_j - \beta_j}{\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}} \sim t_{n-p}$$
+      The $1-\alpha$ symmetric confidence interval is given by:
+      $$\text{pr}\left(\left|\frac{\hat{\beta}_j - \beta_j}{\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}}\right| \le t_{n-p, \, 1-\alpha/2} \right) = 1-\alpha$$
+      which corresponds to the interval:
+      $$[\hat{\beta}_j - t_{n-p, \, 1-\alpha/2}\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}},\, \hat{\beta}_j + t_{n-p, \, 1-\alpha/2}\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}$$
+      If we sample a $Y$ based on the data generating process $Y = \mathbb{X}\beta + \epsilon$ then there is a $1-\alpha$ probability that the true parameter $\beta_j$ lie within the above interval (which is calculated from the sampled data). 
+    </p>
+    <p>
+      The second thing, which is related to the first, is the $t$-statistic. Suppose that there is really no trend. That is, $\beta = 0$ so $Y = \epsilon$ - pure noise. Then:
+      $$\frac{\hat{\beta}_j}{\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}} \sim t_{n-p}$$
+      If $\beta$ is unknown and we want to see if there is any meaningful trend, a sensible choice will be to reject the null hypothesis $H_0: \beta_j=0$ if:
+      $$\left|\frac{\hat{\beta}_j}{\hat{\sigma} \sqrt{[(\mathbb{X}^T\mathbb{X})^{-1}]_{jj}}}\right| \ge t_{n-p,\,1-\alpha/2}$$
+      for some significance level $\alpha$.
+    </p>
+  </main>
+</body>
+</html>
