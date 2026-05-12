@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple delta hedging</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+
+  <!-- Python Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+<body>
+  <header>
+    Simple delta hedging
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Simple Delta hedging</h1>
+
+    <p>
+        Let $x$ be a stochastic process described by:
+        $$\text{d}x = a(x,t) \text{d}t + b(x,t) \text{d}W$$
+        where $\text{d}W$ is a Brownian motion. 
+    </p>
+    <p>
+        Let $G(x,t)$ be a smooth function of $x$ and $t$. That means that if we plot $G$ as a function of $x$ and $t$, the resulting surface is smooth. Note that this seems to contradict the fact that $x(t)$ is a stochastic process and therefore jagged. Indeed, if we plot $G$ strictly as a function of time (ie. $G(x(t), t)$) for a single realisation of $x(t)$ then $G(t)$ will be jagged too. But in $x,t$ space $G$ is smooth.
+    </p>
+    <p>
+        We might ask: after a short period of time, what is the change in $G$ for a specific realisation of $x(t)$? Ito's lemma tells us that:
+        $$\text{d}G = \frac{\partial G}{\partial x} a(x,t) \text{d}t + \frac{\partial G}{\partial t} \text{d}t + \frac{1}{2} \frac{\partial^2 G}{\partial x^2} b^2(x,t) \text{d}t + \frac{\partial G}{\partial x} b(x,t) \text{d}W$$
+    </p>
+    <p>
+        Let us suppose that fluctuations in stock price $S$ follows a drift process:
+        $$\frac{\text{d}S}{S} = \mu \text{d}t + \sigma \text{d}W$$
+        Let $f$ be the price of a derivative with $S$ as its underlying asset. Then by Ito's lemma:
+    </p>
+    <p>
+        $$\text{d}f = \frac{\partial f}{\partial S} \mu S \text{d}t + \frac{\partial f}{\partial t} \text{d}t + \frac{1}{2} \frac{\partial^2 f}{\partial S^2} \sigma^2 S^2 \text{d}t + \frac{\partial f}{\partial S}\sigma S \text{d}W$$
+        At this point, we know that $f$ is a smooth function of $S$ and $t$, although we do not know what this smooth function is. 
+    </p>
+    <p>
+        Now, consider a portfolio $\Pi$ (stock plus option, exclude cash) containing a single unit of the derivative worth $f$, and $-\frac{\partial f}{\partial S}$ units of the underlying, worth $-\frac{\partial f}{\partial S} S$.
+    </p>
+    <p>
+        By Ito's lemma, the change in our underlying short position is:
+        $$-\frac{\partial f}{\partial S} \mu S \text{d}t - \frac{\partial f}{\partial S} \sigma S \text{d}W$$
+        So the change in our portfolio (containing 1 unit of the derivative and $-\frac{\partial f}{\partial S}$ units of the underlying) is:
+        $$\text{d}\Pi = \frac{\partial f}{\partial t} \text{d}t + \frac{1}{2} \frac{\partial^2 f}{\partial S^2} \sigma^2 S^2 \text{d}t$$
+        which is completely deterministic. Now, the growth rate of our portfolio must be equal to the risk free interest rate. Otherwise, there will be an arbitrage opportunity. In fact, there are two cases to consider, as our portfolio value $\Pi$ can be positive or negative. 
+    </p>
+    <p>
+        Let's consider the case where $\Pi$ is initially positive. As with any arbitrage analysis we start with $0$ dollars. We take a short position of $-\frac{\partial f}{\partial S} S$ dollars in the underlying, which puts $\frac{\partial f}{\partial S} S$ dollars in our cash account. Then, we borrow an additional $f - \frac{\partial f}{\partial S} S$ dollars, and together with the money in our cash account we use this to buy one unit of the derivative worth $f$ dollars. So the initial value of our portfolio is $f - \frac{\partial f}{\partial S} S > 0$ dollars, and the initial value of our cash account is $-(f - \frac{\partial f}{\partial S}S) < 0$ dollars (ie. we are borrowing). Where's the arbitrage? Suppose that the growth rate of our delta hedged portfolio is larger than the interest on our borrowed money. Then we make money (at least for a short period of time) by taking loans and entering a bunch of delta hedged options positions, since the deterministic returns on these positions exceed our borrowing costs. If the growth rate is smaller, then we can reverse the construction: instead of buying the option, we sell one unit of it. This puts $f$ dollars in our cash position. Then, we hedge the option position by taking a long position of $\frac{\partial f}{\partial S} S$ dollars in the underlying asset. Since $f > \frac{\partial f}{\partial S} S$, the value of our portfolio is negative, while the value of our cash position is positive. The interest we make on our cash position exceeds the deterministic losses we make on our portfolio, so we end up with a profit.
+    </p>
+    <p>
+        What if $\Pi$ is negative? As before, we take a short position of $-\frac{\partial f}{\partial S} S$ dollars in the underlying, which puts $\frac{\partial f}{\partial S} S$ dollars in our cash account. But now, $\frac{\partial f}{\partial S} S > f$, so we can use the money in our cash account to buy one unit of the derivative and still have some money left over. The value of our portfolio is now $f - \frac{\partial f}{\partial S}S < 0$ dollars while the value of our cash account is $-(f - \frac{\partial f}{\partial S}S) > 0$ dollars. Now suppose the interest rate exceeds the growth of our portfolio. Then, our cash position grows faster than the losses made on our delta hedged portfolio, so again we end up with an arbitrage. 
+    </p>
+    <p>
+        Therefore, the only non-arbitrage scenario is to ensure that:
+        $$\frac{\text{d} \Pi}{\text{d} t} = r\Pi$$
+        Plugging this into the above equation for $\text{d} \Pi$ gives:
+        $$r(f - \frac{\partial f}{\partial S} S) = \frac{\partial f}{\partial t} + \frac{1}{2} \frac{\partial^2 f}{\partial S^2} \sigma^2 S^2$$
+        Which is the Black Scholes formula. 
+    </p>
+    <p>
+        Suppose we find an option in the market that is priced at $f_<$ dollars, below the theoretical fair value of $f_t$ dollars. Then, there is a risk free profit of $f_t - f_<$ dollars to be made. To lock in this profit, we use delta hedging.
+    </p>
+    <p>
+        One way to think about it is that we are buying the option at a discount. That is, imagine that we first spend $f_t$ dollars to buy the option, and then set up the delta hedge. The net growth of our portfolio plus cash positions will be zero if we continuously delta hedge the option to expiry. However, immediately after the delta hedged position is created we get a refund of $f_t - f_<$ dollars, since we have in fact purchased the option at a discounted price. This money we can keep in a separate cash account and let it grow at the risk free rate. There is zero risk in both our delta hedged position, and our separate cash account for the $f_t - f_<$ dollars cash refund, so we have made a risk free profit. 
+    </p>
+    <p>
+        Likewise, suppose the market prices an option at $f_>$, above the theoretical fair value. Then, we will reverse the construction and start selling the option. Again, the idea is to imagine that we sell the option at the theoretical price $f_t$, and set up a delta hedged portfolio by taking a long position in the underlying. But the moment we set up the delta hedged portfolio we immediately get a cash bonus of $f_> - f_t$, since we have actually sold the option at $f_>$ and not $f_t$, thereby making a risk-free profit. 
+    </p>
+
+    <h2>Toy simulation</h2>
+    <p>
+        Here is a vibecoded toy simulation of the process. We assume a stock price $S_0 = 100$ at $t=0$, a strike price $K = 100$, true volatility (of the stock price) $\sigma = 0.2$, and that the implied volatility (which the market uses to price the derivative) is the same as the true volatility.
+    </p>
+    <p>
+        For a European call with terminal condition
+        $$f(S,T)=\max(S-K,0)$$
+        the Black Scholes price is
+        $$C(S,\tau,\sigma)=S\mathcal{N}(d_1)-Ke^{-r\tau}\mathcal{N}(d_2)$$
+        where $\tau=T-t$ and
+        $$d_1=\frac{\ln(S/K)+(r+\frac{1}{2}\sigma^2)\tau}{\sigma\sqrt{\tau}} \qquad d_2=d_1-\sigma\sqrt{\tau}$$
+        For a put option,
+        $$
+        P=Ke^{-r\tau}\mathcal{N}(-d_2)-S\mathcal{N}(-d_1)
+        $$
+        Here is an implementation of the pricing function:
+    </p>
+
+    <pre><code class="language-python">def bs_price(S, K, T, r, sigma, kind="call"):
+    if T <= 1e-10:                           # at expiry: return intrinsic value
+        return max(S - K, 0) if kind == "call" else max(K - S, 0)
+
+    d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+
+    if kind == "call":
+        return S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+
+    return K * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)</code></pre>
+
+    <p>
+        To find the hedge ratio we compute the derivative $\frac{\partial f}{\partial S}$, called the delta. Differentiating the Black-Scholes call price with respect to $S$ and using
+        $$S\phi(d_1)=Ke^{-r\tau}\phi(d_2)$$
+        which follows from
+        $$d_2=d_1-\sigma\sqrt{\tau}$$
+        shows that the $\phi$ terms cancel, leaving
+        $$
+        \Delta=\mathcal{N}(d_1)
+        $$
+    </p>
+
+    <pre><code class="language-python">def bs_delta(S, K, T, r, sigma, kind="call"):
+    if T <= 1e-10:
+        return (1. if S > K else 0.) if kind == "call" \
+                else (-1. if S < K else 0.)
+
+    d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+
+    return norm.cdf(d1) if kind == "call" else norm.cdf(d1) - 1.</code></pre>
+
+    <p>
+        <b>Book-keeping</b><br>
+        <i>Set up the trade</i>
+    </p>
+
+    <pre><code class="language-python">C0 = bs_price(S_path[0], K, T, r, sigma, kind)
+delta0 = bs_delta(S_path[0], K, T, r, sigma, kind)
+
+shares = -delta0                      # we are short delta0 shares
+cash   = delta0 * S_path[0] - C0      # cash received minus premium paid</code></pre>
+    
+    <p>
+        <i>Rebalancing at $t_i$</i><br>
+        Between $t_{i-1}$ and $t_i$, the cash grows at the risk-free rate:
+        $$
+        B_i \leftarrow B_{i-1} e^{r(t_i-t_{i-1})}.
+        $$
+        Next, rebalance to the new target delta, $\Delta_i$. We hold $-\Delta_{i-1}$ and need $-\Delta_i$, so we buy
+        $$
+        \delta_{\mathrm{trade}} = (-\Delta_i)-(-\Delta_{i-1})
+        = \Delta_{i-1}-\Delta_i
+        $$
+        shares, where a negative value means sell. The cash update for this step is
+        $$
+        B_i \leftarrow B_i - \delta_{\mathrm{trade}} \cdot S_i
+        = B_i + (\Delta_i-\Delta_{i-1})S_i.
+        $$
+        Here is the rebalancing loop:
+    </p>
+    
+    <pre><code class="language-python">for curr in hidx[1:]:
+    elapsed = (curr - prev) * dt_sim
+
+    # Step 1: Accrue risk-free interest on cash
+    cash *= np.exp(r * elapsed)
+
+    # Step 2: Rebalance to the new delta
+    T_rem  = T - times[curr]
+    new_d  = bs_delta(S_path[curr], K, T_rem, r, sigma_impl, kind)
+
+    trade  = (-new_d) - shares      # shares to BUY (negative => sell)
+    cash  -= trade * S_path[curr]   # spend / receive cash
+    shares = -new_d
+
+    cash_path.append(cash)
+    prev = curr</code></pre>
+
+    <p>
+        <i>Close the trade at expiry</i><br>
+        At expiry we calculate the final payoff by summing the cash, stock and option positions:
+    </p>
+
+    <pre><code class="language-python">S_T    = paths[:, -1]   # stock price at option maturity     
+payoff = np.maximum(S_T - K, 0) if kind == "call" else np.maximum(K - S_T, 0)
+return payoff + cash + shares * S_T</code></pre>
+    
+    <p>
+        Here are the results of the simulation for different hedging frequencies. As we expect, the mean payoff for each frequency is $0$, because the initial amount that we paid for the call option, <code>CO</code>, was priced correctly using Black Scholes. If it had been mispriced we would have carried the mispricing to time $T$, and the distribution would have been centered about the mispricing. 
+    </p>
+
+    <div style="text-align: center;">
+      <img src="delta_hedging_visualisation.png" alt="delta hedging" width="700">
+    </div>
+
+    </main>
+</body>
+</html>
