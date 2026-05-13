@@ -63,7 +63,7 @@
         At this point, we know that $f$ is a smooth function of $S$ and $t$, although we do not know what this smooth function is. 
     </p>
     <p>
-        Now, consider a portfolio $\Pi$ (stock plus option, exclude cash) containing a single unit of the derivative worth $f$, and $-\frac{\partial f}{\partial S}$ units of the underlying, worth $-\frac{\partial f}{\partial S} S$.
+        Now, consider a <b>long</b> portfolio $\Pi$ (buy derivative, hedge with stock, exclude cash) containing a single unit of the derivative worth $f$, and $-\frac{\partial f}{\partial S}$ units of the underlying, worth $-\frac{\partial f}{\partial S} S$.
     </p>
     <p>
         By Ito's lemma, the change in our underlying short position is:
@@ -109,7 +109,7 @@
     </ol>
 
     <p>
-        Your portfolio is now $-\Pi = -f + \frac{\partial f}{\partial S}S &lt; 0$ (because $\Pi$ is the value of a long derivative portfolio), and your cash account is $\Pi &gt; 0$.
+        Your portfolio is now $-\Pi = -f + \frac{\partial f}{\partial S}S$ (because $\Pi$ is the value of a long derivative portfolio), and your cash account is $\Pi$.
         Again, if the initial portfolio value was positive (so that the value the position from shorting the portfolio is negative), then the
         interest earned on the cash account exceeds the losses on the delta-hedged short position.
         And if the initial portfolio value was negative (so that the value of the position from shorting the portfolio is positive), then the 
