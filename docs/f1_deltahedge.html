@@ -70,34 +70,116 @@
         $$-\frac{\partial f}{\partial S} \mu S \text{d}t - \frac{\partial f}{\partial S} \sigma S \text{d}W$$
         So the change in our portfolio (containing 1 unit of the derivative and $-\frac{\partial f}{\partial S}$ units of the underlying) is:
         $$\text{d}\Pi = \frac{\partial f}{\partial t} \text{d}t + \frac{1}{2} \frac{\partial^2 f}{\partial S^2} \sigma^2 S^2 \text{d}t$$
-        which is completely deterministic. Now, the growth rate of our portfolio must be equal to the risk free interest rate. Otherwise, there will be an arbitrage opportunity. In fact, there are two cases to consider, as our portfolio value $\Pi$ can be positive or negative. 
+        which is completely deterministic. 
     </p>
     <p>
-        Let's consider the case where $\Pi$ is initially positive. As with any arbitrage analysis we start with $0$ dollars. We take a short position of $-\frac{\partial f}{\partial S} S$ dollars in the underlying, which puts $\frac{\partial f}{\partial S} S$ dollars in our cash account. Then, we borrow an additional $f - \frac{\partial f}{\partial S} S$ dollars, and together with the money in our cash account we use this to buy one unit of the derivative worth $f$ dollars. So the initial value of our portfolio is $f - \frac{\partial f}{\partial S} S > 0$ dollars, and the initial value of our cash account is $-(f - \frac{\partial f}{\partial S}S) < 0$ dollars (ie. we are borrowing). Where's the arbitrage? Suppose that the growth rate of our delta hedged portfolio is larger than the interest on our borrowed money. Then we make money (at least for a short period of time) by taking loans and entering a bunch of delta hedged options positions, since the deterministic returns on these positions exceed our borrowing costs. If the growth rate is smaller, then we can reverse the construction: instead of buying the option, we sell one unit of it. This puts $f$ dollars in our cash position. Then, we hedge the option position by taking a long position of $\frac{\partial f}{\partial S} S$ dollars in the underlying asset. Since $f > \frac{\partial f}{\partial S} S$, the value of our portfolio is negative, while the value of our cash position is positive. The interest we make on our cash position exceeds the deterministic losses we make on our portfolio, so we end up with a profit.
+        Since $\text{d}\Pi$ contains no $\text{d}W$ term, the portfolio is
+        <b>instantaneously risk-free</b> - its value changes deterministically over
+        any short interval. A risk-free portfolio must earn exactly the risk-free rate
+        $r$. If it didn't, one could borrow at $r$, invest in the portfolio, and
+        extract a guaranteed profit. Below we spell out both cases.
+    </p>
+
+    <p>
+        <b>Case 1: Portfolio grows faster than $r$</b><br>
+        Suppose $\frac{d\Pi}{dt} &gt; r\Pi$. Then we long the portfolio:
+    </p>
+    <ol>
+    <li>Start with $\$0$.</li>
+    <li>Short $\frac{\partial f}{\partial S}$ units of the stock, receiving $\frac{\partial f}{\partial S}S$ in cash.</li>
+    <li>Borrow an additional $\ f - \frac{\partial f}{\partial S}S$ at rate $r$.</li>
+    <li>Use all cash to buy one unit of the derivative at cost $\ f$.</li>
+    </ol>
+
+    <p>
+        The portfolio is worth $\Pi = f - \frac{\partial f}{\partial S}S$, and the cash account is
+        $-\Pi$. There are two cases to consider. If the initial value of the portfolio is positive, then we end up with a negative cash balance.
+        The portfolio grows faster than the interest accumulates on the borrowed amount and we profit.
+        If the initial value of the portfolio is negative, then we end up with a positive cash balance. The interest earned on this cash exceeds the change in our portfolio position, and we again profit.
+    </p>
+
+    <p>
+        <b>Case 2: Portfolio grows slower than $r$</b><br>
+        Suppose $\frac{d\Pi}{dt} &lt; r\Pi$. Reverse the construction:
+    </p>
+    <ol>
+    <li>Start with $\$0$.</li>
+    <li>Short one unit of the derivative, receiving $\ f$ in cash.</li>
+    <li>Buy $\frac{\partial f}{\partial S}$ units of the stock at cost $\frac{\partial f}{\partial S}S$.</li>
+    </ol>
+
+    <p>
+        Your portfolio is now $-\Pi = -f + \frac{\partial f}{\partial S}S &lt; 0$ (because $\Pi$ is the value of a long derivative portfolio), and your cash account is $\Pi &gt; 0$.
+        Again, if the initial portfolio value was positive (so that the value the position from shorting the portfolio is negative), then the
+        interest earned on the cash account exceeds the losses on the delta-hedged short position.
+        And if the initial portfolio value was negative (so that the value of the position from shorting the portfolio is positive), then the 
+        interest paid on the borrowed cash is less than the gains on the delta-hedged short position. In either case, we profit.
+    </p>
+
+    <p><b>Summary:</b></p>
+    <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+        <th></th>
+        <th>$\frac{d\Pi}{dt} &gt; r\Pi$<br><i>Buy derivative, short stock</i></th>
+        <th>$\frac{d\Pi}{dt} &lt; r\Pi$<br><i>Sell derivative, buy stock</i></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <td><b>$\Pi &gt; 0$</b></td>
+        <td>Portfolio returns beat borrowing costs.</td>
+        <td>Cash interest beats losses on short position.</td>
+        </tr>
+        <tr>
+        <td><b>$\Pi &lt; 0$</b></td>
+        <td>Cash interest beats losses on portfolio.</td>
+        <td>Gains on short position beat interest payments.</td>
+        </tr>
+    </tbody>
+    </table>
+
+    <p>
+        In both cases the ability to scale the position makes the profit large. So the
+        only price consistent with no arbitrage is:
+        $$\frac{d\Pi}{dt} = r\Pi$$
+        Substituting the expression for $\text{d}\Pi$ gives the Black–Scholes PDE:
+        $$\frac{\partial f}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 f}{\partial S^2} = r\!\left(f - \frac{\partial f}{\partial S}S\right)$$
     </p>
     <p>
-        What if $\Pi$ is negative? As before, we take a short position of $-\frac{\partial f}{\partial S} S$ dollars in the underlying, which puts $\frac{\partial f}{\partial S} S$ dollars in our cash account. But now, $\frac{\partial f}{\partial S} S > f$, so we can use the money in our cash account to buy one unit of the derivative and still have some money left over. The value of our portfolio is now $f - \frac{\partial f}{\partial S}S < 0$ dollars while the value of our cash account is $-(f - \frac{\partial f}{\partial S}S) > 0$ dollars. Now suppose the interest rate exceeds the growth of our portfolio. Then, our cash position grows faster than the losses made on our delta hedged portfolio, so again we end up with an arbitrage. 
+        Let $f_t$ denote the Black-Scholes fair value of the option. Suppose the
+        market quotes a price $f_m \neq f_t$. The key insight is that a
+        <b>continuously delta-hedged position has zero net P&amp;L at expiry</b> when
+        the option is purchased at fair value. Any deviation from fair value translates
+        directly into a riskless cash gain or loss at inception, which can then be
+        invested at the risk-free rate.
     </p>
+
+    <p><b>Option is underpriced ($f_m < f_t$):</b></p>
+    <ol>
+    <li><b>Buy</b> the option at $f_m$ and immediately set up the delta hedge.</li>
+    <li>This is equivalent to buying at fair value $f_t$ and receiving a cash refund of $f_t - f_m > 0$.</li>
+    <li>The delta-hedged portfolio has zero net P&amp;L from this point. The refund is invested at the risk-free rate and kept.</li>
+    <li>Risk-free profit: $f_t - f_m$, compounded to expiry.</li>
+    </ol>
+
+    <p><b>Option is overpriced ($f_m > f_t$):</b></p>
+
+    <ol>
+    <li><b>Sell</b> the option at $f_m$ and immediately set up the delta hedge (now long the underlying).</li>
+    <li>This is equivalent to selling at fair value $f_t$ and receiving an immediate cash bonus of $f_m - f_t > 0$.</li>
+    <li>The delta-hedged portfolio again has zero net P&amp;L. The bonus is invested at the risk-free rate.</li>
+    <li>Risk-free profit: $f_m - f_t$, compounded to expiry.</li>
+    </ol>
+
     <p>
-        Therefore, the only non-arbitrage scenario is to ensure that:
-        $$\frac{\text{d} \Pi}{\text{d} t} = r\Pi$$
-        Plugging this into the above equation for $\text{d} \Pi$ gives:
-        $$r(f - \frac{\partial f}{\partial S} S) = \frac{\partial f}{\partial t} + \frac{1}{2} \frac{\partial^2 f}{\partial S^2} \sigma^2 S^2$$
-        Which is the Black Scholes formula. 
-    </p>
-    <p>
-        Suppose we find an option in the market that is priced at $f_<$ dollars, below the theoretical fair value of $f_t$ dollars. Then, there is a risk free profit of $f_t - f_<$ dollars to be made. To lock in this profit, we use delta hedging.
-    </p>
-    <p>
-        One way to think about it is that we are buying the option at a discount. That is, imagine that we first spend $f_t$ dollars to buy the option, and then set up the delta hedge. The net growth of our portfolio plus cash positions will be zero if we continuously delta hedge the option to expiry. However, immediately after the delta hedged position is created we get a refund of $f_t - f_<$ dollars, since we have in fact purchased the option at a discounted price. This money we can keep in a separate cash account and let it grow at the risk free rate. There is zero risk in both our delta hedged position, and our separate cash account for the $f_t - f_<$ dollars cash refund, so we have made a risk free profit. 
-    </p>
-    <p>
-        Likewise, suppose the market prices an option at $f_>$, above the theoretical fair value. Then, we will reverse the construction and start selling the option. Again, the idea is to imagine that we sell the option at the theoretical price $f_t$, and set up a delta hedged portfolio by taking a long position in the underlying. But the moment we set up the delta hedged portfolio we immediately get a cash bonus of $f_> - f_t$, since we have actually sold the option at $f_>$ and not $f_t$, thereby making a risk-free profit. 
+        In both cases the delta hedge eliminates all exposure to the stock price path,
+        leaving only the riskless gain from the initial mispricing.
     </p>
 
     <h2>Toy simulation</h2>
     <p>
-        Here is a vibecoded toy simulation of the process. We assume a stock price $S_0 = 100$ at $t=0$, a strike price $K = 100$, true volatility (of the stock price) $\sigma = 0.2$, and that the implied volatility (which the market uses to price the derivative) is the same as the true volatility.
+        Here is a vibecoded toy simulation of the process. We assume a stock price $S_0 = 100$ at $t=0$, a strike price $K = 100$, $r=0.05$, true volatility (of the stock price) $\sigma = 0.2$, and that the implied volatility (which the market uses to price the derivative) is the same as the true volatility.
     </p>
     <p>
         For a European call with terminal condition
