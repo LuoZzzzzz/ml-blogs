@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Implied volatility</title>
+
+  <!-- Link external CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- MathJax LaTeX Support -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'all'  // Enable automatic equation numbering
+      }
+    };
+  </script>
+  <script
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  ></script>
+
+  <!-- Python Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+<body>
+  <header>
+    Implied volatility
+  </header>
+
+  <main>
+    <nav class="page-nav">
+      <a href="index.html" class="btn">Index</a>
+    </nav>
+
+    <h1>Implied volatility</h1>
+    <div style="color: darkblue;">Blue: agent generated</div>
+    <div style="color: black;">Black: written by me</div>
+    <div style="color: darkred;">Red: old or wrong content</div>
+
+    <p>
+        Given the "true" volatility, the Black Scholes model gives us a "no arbitrage" pricing surface, $f(S, t; K, r, \sigma, T)$. That is, provided all our assumptions are true, then an option with specifications $(K, r, \sigma, T)$ should be worth $f(S, t)$ dollars if price of the underlying stock is $S$ at time $t$. 
+    </p>
+    <p>
+        In reality, we do not know what the "true" volatility is! We can, however, still construct a pricing function; the difference now is that instead of pricing the option ourselves, we let the market price it for us. We go onto an exchange, collect various option prices $f$ for different $K$ (strike price) and $T$s (time to expiry), and interpolate between our data points to deduce the market's pricing surface as a function of $K$ and $T$, for a fixed $S$ and $t$ (ie. right now). Note that there is also a slight change in our mental picture: instead of pricing across all $S$ and $t$ the surface now only applies for the $S$ and $t$ right now, and it has input dimensions $K$ and $T$.
+    </p>
+    <p>
+        For any option on the market, $K, r, T$ are well defined, as is $f$ (which is empirical). Therefore, the only unknown left is the volatility $\sigma$, which we can find by reverse engineering the market price. This volatility is called the <b>implied</b> volatility associated with the option. It is the volatility, that when priced using the (ideal) assumptions of the Black Scholes model, produces the observed market price. Importantly, we need to note that $\sigma_\text{imp}$ and $f_\text{mkt}$ are the <b>same thing</b> - given one we can calculate the other. Somewhat tautological. The reason we want to even find $\sigma_\text{imp}$ is because it is a parameter of the Black Scholes model - so given the empirical $\sigma_\text{imp}$ we can combine it with our ideal BS theory to make certain <b>predictions</b> about things that are not directly calculatable from the market snapshot. 
+    </p>
+    <p style="color: darkblue;">
+        Why should the implied volatility be different from the "true" volatility? Well, because Black Scholes is a model, and the market knows it's wrong. Implied volatility is the market's way of encoding everything BS can't capture - things like skew, jumps, risk premia - into a single number. 
+    </p>
+    <p>
+        Now in theory, we could, at a given $S$ and $t$, sample a large number of option prices, calculate $\sigma_\text{imp}$ for each of them, and fit a plot of $\sigma_\text{imp}(K, T)$. This is the implied-volatility surface. To be more specific, the implied volatility surface may be plotted against $K, T$, but it is also parameterised by $S, t$. For example, the surface moves when the price of the underlying moves, leading to $S$ dependence, and the surface may also move even when everything else stayed constant due to changing market regimes, leading to explicit dependence on the current time $t$ (ie. $t = \text{April 1 2025}$). Hence, the precise way to describe the surface is as $\sigma_\text{imp}(K, T; S, t)$. 
+    </p>
+    <p>
+        Suppose that at time $t$ and underlying price $S$ we bought one unit of the option. Since we are going to delta hedge it to expiry we are interested in the trajectory of this option along the $\sigma_\text{imp}(K, T; S, t)$ surface. $K$ remains constant (because it is specified on the contract), and for now let us assume that the implied volatility has no explicit dependence on the current time $t$. So the two things that can vary in $\sigma_\text{imp}(K, T; S, t)$ are time to expiry $T$ and $S$. Since $K$ is constant for our option, our option just moves in a straight line in the $-T$ direction, towards the point $(K, T=0)$. However, because the the price of the underlying, $S$, is also changing, the surface might move up and down during the process. Therefore the change in the implied volatility (which, remember, can be mapped deterministically to the price of the option, by definition!) is given by:
+        $$\text{d}\sigma_\text{imp} = \frac{\partial \sigma_\text{imp}}{\partial T} \text{d}T + \frac{\partial \sigma_\text{imp}}{\partial S}\text{d}S = -\frac{\partial \sigma_\text{imp}}{\partial T} \text{d}t + \frac{\partial \sigma_\text{imp}}{\partial S}\text{d}S$$
+        So the change in the height of the implied volatility surface due to changes in the underlying price $S$ is captured by the term $\frac{\partial \sigma_\text{imp}}{\partial S}\text{d}S$ - which by the way, is unknown, so we have to forecast it empirically.
+    </p>
+    <p>
+        In the <b>sticky strike</b> model, we assume that the volatility surface is agnostic to changes in $S$. That is, that $\sigma_\text{imp} = \sigma_\text{imp}(K, T; \text{no dependence on } S, t)$. Therefore the implied volatility surface as a function of $K$ and $T$ remain constant even if the underlying price $S$ is changing. In that case the change in the implied volatility of our option is captured entirely by $\frac{\sigma_\text{imp}}{\partial T}$, which is something that we can empirically fit. This thing is known as the <b>term structure</b>. In this case:
+        $$\text{d}\sigma_\text{imp} = \frac{\partial \sigma_\text{imp}}{\partial T} \text{d}t \phantom{xxx} \text{(sticky strike)}$$
+        The sticky strike model is unrealistic, because why should the volatility surface be agnostic to the way that $S$ is moving? A more realistic way to do things is to reparameterise the surface in terms of $S/K, T$, where $S/K$ is called the "moneyness" of the option. So $\sigma_\text{imp} = \sigma_\text{imp}(m = S/K, T; S, t)$. The point of the paramterisation, which as one may suspect, is to introduce a slightly more realistic model. Here, it is the <b>sticky moneyness</b> model - the implied volatility surface, when written in terms of $m, T$, is agnostic to shifts in $S$. 
+    </p>
+    <p>
+        One small thing to note is that even though it seems like there is some freedom now to move in the $S$ direction, the $S$ that we use when constructing $\sigma_\text{imp}(m = S/K, T; S, t)$ from a market snapshot at $S, t$ is in fact the same $S$ across all options (assuming that there is a single underlying stock) - so any variations in moneyness $m$ when constructing the surface is strictly due to differences in $K$. However, when we later track / forecast (under the sticky moneyness model) the change in the implied volatility of a given option, we consider (through the chain rule) changes in $m$ that arise from changes in $S$. This is mathematically fine if our assumptions hold, but it bugs me a little bit so I am writing it down. Anyways, the change in the implied volatility is:
+        $$\text{d}\sigma_\text{imp} = \frac{\partial \sigma_\text{imp}}{\partial T} \text{d}T + \frac{\partial \sigma_\text{imp}}{\partial m} \frac{\partial m}{\partial S} \text{d}S = -\frac{\partial \sigma_\text{imp}}{\partial T} \text{d}t + \frac{1}{K}\frac{\partial \sigma_\text{imp}}{\partial m} \text{d}S \phantom{xxx} \text{(sticky moneyness)}$$
+    </p>
+    </main>
+</body>
+</html>
